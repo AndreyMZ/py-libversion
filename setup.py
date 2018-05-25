@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import platform
 import subprocess
 from os import path
 
@@ -7,6 +7,31 @@ from setuptools import Extension, setup
 
 
 here = path.abspath(path.dirname(__file__))
+
+
+def ext_windows():
+    libversion_base_dir = '../libversion'
+    return Extension(
+        'libversion._libversion',
+        sources=[
+            'src/_libversion.c',
+            path.join(libversion_base_dir, 'libversion/compare.c'),
+            path.join(libversion_base_dir, 'libversion/signature.c'),
+        ],
+        include_dirs=[
+            libversion_base_dir,
+        ],
+    )
+
+
+def ext_linux():
+    return Extension(
+        'libversion._libversion',
+        sources=[
+            'src/_libversion.c',
+        ],
+        **pkgconfig('libversion')
+    )
 
 
 def pkgconfig(package):
@@ -60,11 +85,7 @@ setup(
     ],
     packages=['libversion'],
     ext_modules=[
-        Extension(
-            'libversion._libversion',
-            sources=['src/_libversion.c'],
-            **pkgconfig('libversion')
-        )
+        ext_windows() if platform.system() == 'Windows' else ext_linux()
     ],
     test_suite='tests'
 )
